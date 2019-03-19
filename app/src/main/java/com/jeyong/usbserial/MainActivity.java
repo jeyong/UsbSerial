@@ -21,6 +21,14 @@ public class MainActivity extends AppCompatActivity {
         startService(intent);
     }
 
+    /*
+    ToDo:
+     * command 만드는 방법
+     * inputstream을 mavlink 메시지로 만들기
+     * 현재 상태를 나타내는 struct나 class를 어떻게 저장할 것인가?
+     * instance를 만들고 거기에 복사해 놓고 access하는 방법은?
+     * 정보를 받는 경우 : update로 받는 경우와 get하는 것은 분리가 필요해 보인다. 왜??
+     */
     public void getIn(){
         InputStream in = new InputStream() {
             @Override

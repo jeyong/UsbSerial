@@ -21,7 +21,11 @@ import com.felhr.usbserial.UsbSerialInterface;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
-
+/*
+ToDo :
+ * serial에서 onReceive로 받아온 다음 mavlink로 전달하는 방법
+ *
+ */
 public class UsbService extends Service {
 
     public static final String TAG = "UsbService";
@@ -83,6 +87,7 @@ public class UsbService extends Service {
         }
     };
 
+    // USB 연결 관련된 event를 broadcastreceiver로 수신하여 처리.
     private final BroadcastReceiver usbReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context arg0, Intent arg1) {
@@ -93,6 +98,7 @@ public class UsbService extends Service {
                     Intent intent = new Intent(ACTION_USB_PERMISSION_GRANTED);
                     arg0.sendBroadcast(intent);
                     connection = usbManager.openDevice(device);
+                    // usb연결 thread를 구동
                     new ConnectionThread().start();
                 } else // User not accepted our USB connection. Send an Intent to the Main Activity
                 {
@@ -143,16 +149,21 @@ public class UsbService extends Service {
         UsbService.SERVICE_CONNECTED = false;
     }
 
+    // 메시지 보내기
     public void write(byte[] data) {
         if (serialPort != null)
             serialPort.write(data);
     }
 
+    // ToDo : 여기서 필요한 handler를 어떤 것일까? main thread or worker thread?
     public void setHandler(Handler mHandler) {
         this.mHandler = mHandler;
     }
 
+    // serial 장치 찾기
     private void findSerialPortDevice() {
+        // 지정한 장치를 찾기 위한 동작 필요. vendor ID와 product ID를 확인하여 입력하기
+        // ToDo : 연결된 usb 장치를 확인하는 방법 필요
         // This snippet will try to open the first encountered usb device connected, excluding usb root hubs
         HashMap<String, UsbDevice> usbDevices = usbManager.getDeviceList();
         if (!usbDevices.isEmpty()) {
@@ -224,7 +235,7 @@ public class UsbService extends Service {
             if (serialPort != null) {
                 if (serialPort.open()) {
                     serialPortConnected = true;
-                    serialPort.setBaudRate(BAUD_RATE);
+                    serialPort.setBaudRate(BAUD_RATE); //ToDo :  baud_rate를 얼마로 할 것인가? 115200
                     serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
                     serialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
                     serialPort.setParity(UsbSerialInterface.PARITY_NONE);
@@ -244,6 +255,7 @@ public class UsbService extends Service {
                     // to be uploaded or not
                     //Thread.sleep(2000); // sleep some. YMMV with different chips.
 
+                    // USB 연결의 설정이 완전히 완료되면 ACTION_USB_READY를 broadcast한다.
                     // Everything went as expected. Send an intent to MainActivity
                     Intent intent = new Intent(ACTION_USB_READY);
                     context.sendBroadcast(intent);
